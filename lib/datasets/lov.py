@@ -4,7 +4,7 @@ import os
 import datasets
 import datasets.lov
 import datasets.imdb
-import cPickle
+import pickle
 import numpy as np
 import cv2
 import PIL
@@ -39,7 +39,7 @@ class lov(datasets.imdb):
         self._points, self._points_all = self._load_object_points()
         self._extents = self._load_object_extents()
 
-        self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
+        self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
         self._image_ext = '.png'
         self._image_index = self._load_image_set_index()
         self._roidb_handler = self.gt_roidb
@@ -140,19 +140,19 @@ class lov(datasets.imdb):
 
     def _load_object_points(self):
 
-        points = [[] for _ in xrange(len(self._classes))]
+        points = [[] for _ in range(len(self._classes))]
         num = np.inf
 
-        for i in xrange(1, len(self._classes)):
+        for i in range(1, len(self._classes)):
             point_file = os.path.join(self._lov_path, 'models', self._classes[i], 'points.xyz')
-            print point_file
+            print(point_file)
             assert os.path.exists(point_file), 'Path does not exist: {}'.format(point_file)
             points[i] = np.loadtxt(point_file)
             if points[i].shape[0] < num:
                 num = points[i].shape[0]
 
         points_all = np.zeros((self.num_classes, num, 3), dtype=np.float32)
-        for i in xrange(1, len(self._classes)):
+        for i in range(1, len(self._classes)):
             points_all[i, :, :] = points[i][:num, :]
 
         return points, points_all
@@ -172,7 +172,7 @@ class lov(datasets.imdb):
 
     def compute_class_weights(self):
 
-        print 'computing class weights'
+        print('computing class weights')
         num_classes = self.num_classes
         count = np.zeros((num_classes,), dtype=np.int64)
         k = 0
@@ -181,7 +181,7 @@ class lov(datasets.imdb):
             # label path
             label_path = self.label_path_from_index(index)
             im = cv2.imread(label_path, cv2.IMREAD_UNCHANGED)
-            for i in xrange(num_classes):
+            for i in range(num_classes):
                 I = np.where(im == i)
                 count[i] += len(I[0])
             k += 100
@@ -189,12 +189,12 @@ class lov(datasets.imdb):
         count[0] = 0
         max_count = np.amax(count)
 
-        for i in xrange(num_classes):
+        for i in range(num_classes):
             if i == 0:
                 self._class_weights[i] = 1
             else:
                 self._class_weights[i] = min(2 * float(max_count) / float(count[i]), 10.0)
-            print self._classes[i], self._class_weights[i]
+            print(self._classes[i], self._class_weights[i])
 
 
     def gt_roidb(self):
@@ -207,9 +207,9 @@ class lov(datasets.imdb):
         cache_file = os.path.join(self.cache_path, self.name + '_gt_roidb.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                roidb = cPickle.load(fid)
-            print '{} gt roidb loaded from {}'.format(self.name, cache_file)
-            print 'class weights: ', roidb[0]['class_weights']
+                roidb = pickle.load(fid)
+            print('{} gt roidb loaded from {}'.format(self.name, cache_file))
+            print('class weights: ', roidb[0]['class_weights'])
             return roidb
 
         # self.compute_class_weights()
@@ -219,15 +219,15 @@ class lov(datasets.imdb):
 
         if not cfg.TRAIN.SEGMENTATION:
             # print out recall
-            for i in xrange(1, self.num_classes):
-                print '{}: Total number of boxes {:d}'.format(self.classes[i], self._num_boxes_all[i])
-                print '{}: Number of boxes covered {:d}'.format(self.classes[i], self._num_boxes_covered[i])
+            for i in range(1, self.num_classes):
+                print('{}: Total number of boxes {:d}'.format(self.classes[i], self._num_boxes_all[i]))
+                print('{}: Number of boxes covered {:d}'.format(self.classes[i], self._num_boxes_covered[i]))
                 if self._num_boxes_all[i] > 0:
-                    print '{}: Recall {:f}'.format(self.classes[i], float(self._num_boxes_covered[i]) / float(self._num_boxes_all[i]))
+                    print('{}: Recall {:f}'.format(self.classes[i], float(self._num_boxes_covered[i]) / float(self._num_boxes_all[i])))
 
         with open(cache_file, 'wb') as fid:
-            cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
-        print 'wrote gt roidb to {}'.format(cache_file)
+            pickle.dump(gt_roidb, fid, pickle.HIGHEST_PROTOCOL)
+        print('wrote gt roidb to {}'.format(cache_file))
 
         return gt_roidb
 
@@ -317,10 +317,10 @@ class lov(datasets.imdb):
         # check how many gt boxes are covered by anchors
         max_overlaps = overlaps_grid.max(axis = 0)
         fg_inds = []
-        for k in xrange(1, self.num_classes):
+        for k in range(1, self.num_classes):
             fg_inds.extend(np.where((gt_classes == k) & (max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP))[0])
 
-        for i in xrange(self.num_classes):
+        for i in range(self.num_classes):
             self._num_boxes_all[i] += len(np.where(gt_classes == i)[0])
             self._num_boxes_covered[i] += len(np.where(gt_classes[fg_inds] == i)[0])
 
@@ -336,7 +336,7 @@ class lov(datasets.imdb):
 
         # label image is in BGR order
         index = label_image[:,:,2] + 256*label_image[:,:,1] + 256*256*label_image[:,:,0]
-        for i in xrange(len(class_colors)):
+        for i in range(len(class_colors)):
             color = class_colors[i]
             ind = color[0] + 256*color[1] + 256*256*color[2]
             I = np.where(index == ind)
@@ -353,7 +353,7 @@ class lov(datasets.imdb):
         image_g = np.zeros((height, width), dtype=np.float32)
         image_b = np.zeros((height, width), dtype=np.float32)
 
-        for i in xrange(len(class_colors)):
+        for i in range(len(class_colors)):
             color = class_colors[i]
             I = np.where(labels == i)
             image_r[I] = color[0]
@@ -390,7 +390,7 @@ class lov(datasets.imdb):
             else:
                 results = {'labels': sg_labels, 'rois_rgb': rois_rgb, 'poses_rgb': poses_rgb, 'rois': rois, 'poses': poses, 'poses_refined': poses_new, 'poses_icp': poses_icp}
             filename = os.path.join(mat_dir, '%06d.mat' % im_ind)
-            print filename
+            print(filename)
             scipy.io.savemat(filename, results, do_compression=True)
 
 
@@ -411,13 +411,13 @@ class lov(datasets.imdb):
         hist += self.fast_hist(gt_labels.flatten(), sg_labels.flatten(), n_cl)
 
         # per-class IU
-        print 'per-class segmentation IoU'
+        print('per-class segmentation IoU')
         intersection = np.diag(hist)
         union = hist.sum(1) + hist.sum(0) - np.diag(hist)
         index = np.where(union > 0)[0]
         for i in range(len(index)):
             ind = index[i]
-            print '{} {}'.format(self._classes[ind], intersection[ind] / union[ind])
+            print('{} {}'.format(self._classes[ind], intersection[ind] / union[ind]))
 
         # evaluate pose
         if cfg.TEST.POSE_REG:
@@ -435,7 +435,7 @@ class lov(datasets.imdb):
             else:
                 results = {'labels': sg_labels, 'rois_rgb': rois_rgb, 'poses_rgb': poses_rgb, 'rois': rois, 'poses': poses, 'poses_refined': poses_new, 'poses_icp': poses_icp}
             filename = os.path.join(mat_dir, '%06d.mat' % im_ind)
-            print filename
+            print(filename)
             scipy.io.savemat(filename, results, do_compression=True)
 
             poses_gt = meta_data['poses']
@@ -443,80 +443,80 @@ class lov(datasets.imdb):
                 poses_gt = np.reshape(poses_gt, (3, 4, 1))
             num = poses_gt.shape[2]
 
-            for j in xrange(num):
+            for j in range(num):
                 if meta_data['cls_indexes'][j] <= 0:
                     continue
                 cls = self.classes[int(meta_data['cls_indexes'][j])]
-                print cls
-                print 'gt pose'
-                print poses_gt[:, :, j]
+                print(cls)
+                print('gt pose')
+                print(poses_gt[:, :, j])
 
-                for k in xrange(rois.shape[0]):
+                for k in range(rois.shape[0]):
                     cls_index = int(rois[k, 1])
                     if cls_index == meta_data['cls_indexes'][j]:
 
-                        print 'estimated pose'
+                        print('estimated pose')
                         RT = np.zeros((3, 4), dtype=np.float32)
                         RT[:3, :3] = quat2mat(poses[k, :4])
                         RT[:, 3] = poses[k, 4:7]
-                        print RT
+                        print(RT)
 
                         if cfg.TEST.POSE_REFINE:
-                            print 'translation refined pose'
+                            print('translation refined pose')
                             RT_new = np.zeros((3, 4), dtype=np.float32)
                             RT_new[:3, :3] = quat2mat(poses_new[k, :4])
                             RT_new[:, 3] = poses_new[k, 4:7]
-                            print RT_new
+                            print(RT_new)
 
-                            print 'ICP refined pose'
+                            print('ICP refined pose')
                             RT_icp = np.zeros((3, 4), dtype=np.float32)
                             RT_icp[:3, :3] = quat2mat(poses_icp[k, :4])
                             RT_icp[:, 3] = poses_icp[k, 4:7]
-                            print RT_icp
+                            print(RT_icp)
 
                         error_rotation = re(RT[:3, :3], poses_gt[:3, :3, j])
-                        print 'rotation error: {}'.format(error_rotation)
+                        print('rotation error: {}'.format(error_rotation))
 
                         error_translation = te(RT[:, 3], poses_gt[:, 3, j])
-                        print 'translation error: {}'.format(error_translation)
+                        print('translation error: {}'.format(error_translation))
 
                         # compute pose error
                         if cls == '024_bowl' or cls == '036_wood_block' or cls == '061_foam_brick':
                             error = adi(RT[:3, :3], RT[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points[cls_index])
                         else:
                             error = add(RT[:3, :3], RT[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points[cls_index])
-                        print 'error: {}'.format(error)
+                        print('error: {}'.format(error))
 
                         if cfg.TEST.POSE_REFINE:
                             error_rotation_new = re(RT_new[:3, :3], poses_gt[:3, :3, j])
-                            print 'rotation error new: {}'.format(error_rotation_new)
+                            print('rotation error new: {}'.format(error_rotation_new))
 
                             error_translation_new = te(RT_new[:, 3], poses_gt[:, 3, j])
-                            print 'translation error new: {}'.format(error_translation_new)
+                            print('translation error new: {}'.format(error_translation_new))
 
                             if cls == '024_bowl' or cls == '036_wood_block' or cls == '061_foam_brick':
                                 error_new = adi(RT_new[:3, :3], RT_new[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points[cls_index])
                             else:
                                 error_new = add(RT_new[:3, :3], RT_new[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points[cls_index])
-                            print 'error new: {}'.format(error_new)
+                            print('error new: {}'.format(error_new))
 
                             error_rotation_icp = re(RT_icp[:3, :3], poses_gt[:3, :3, j])
-                            print 'rotation error icp: {}'.format(error_rotation_icp)
+                            print('rotation error icp: {}'.format(error_rotation_icp))
 
                             error_translation_icp = te(RT_icp[:, 3], poses_gt[:, 3, j])
-                            print 'translation error icp: {}'.format(error_translation_icp)
+                            print('translation error icp: {}'.format(error_translation_icp))
 
                             if cls == '024_bowl' or cls == '036_wood_block' or cls == '061_foam_brick':
                                 error_icp = adi(RT_icp[:3, :3], RT_icp[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points[cls_index])
                             else:
                                 error_icp = add(RT_icp[:3, :3], RT_icp[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points[cls_index])
-                            print 'error icp: {}'.format(error_icp)
+                            print('error icp: {}'.format(error_icp))
 
-                        print 'threshold: {}'.format(0.1 * np.linalg.norm(self._extents[cls_index, :]))
+                        print('threshold: {}'.format(0.1 * np.linalg.norm(self._extents[cls_index, :])))
         
 
     def evaluate_segmentations(self, segmentations, output_dir):
-        print 'evaluating segmentations'
+        print('evaluating segmentations')
         # compute histogram
         n_cl = self.num_classes
         hist = np.zeros((n_cl, n_cl))
@@ -537,7 +537,7 @@ class lov(datasets.imdb):
         count_correct_refined = np.zeros((self.num_classes,), dtype=np.float32)
         count_correct_icp = np.zeros((self.num_classes,), dtype=np.float32)
         threshold = np.zeros((self.num_classes,), dtype=np.float32)
-        for i in xrange(self.num_classes):
+        for i in range(self.num_classes):
             threshold[i] = 0.1 * np.linalg.norm(self._extents[i, :])
 
         # for each image
@@ -573,13 +573,13 @@ class lov(datasets.imdb):
                     poses_gt = np.reshape(poses_gt, (3, 4, 1))
                 num = poses_gt.shape[2]
 
-                for j in xrange(num):
+                for j in range(num):
                     if meta_data['cls_indexes'][j] <= 0:
                         continue
                     cls = self.classes[int(meta_data['cls_indexes'][j])]
                     count_all[int(meta_data['cls_indexes'][j])] += 1
     
-                    for k in xrange(rois.shape[0]):
+                    for k in range(rois.shape[0]):
                         cls_index = int(rois[k, 1])
                         if cls_index == meta_data['cls_indexes'][j]:
 
@@ -644,18 +644,18 @@ class lov(datasets.imdb):
 
         # overall accuracy
         acc = np.diag(hist).sum() / hist.sum()
-        print 'overall accuracy', acc
+        print('overall accuracy', acc)
         # per-class accuracy
         acc = np.diag(hist) / hist.sum(1)
-        print 'mean accuracy', np.nanmean(acc)
+        print('mean accuracy', np.nanmean(acc))
         # per-class IU
-        print 'per-class IU'
+        print('per-class IU')
         iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
         for i in range(n_cl):
-            print '{} {}'.format(self._classes[i], iu[i])
-        print 'mean IU', np.nanmean(iu)
+            print('{} {}'.format(self._classes[i], iu[i]))
+        print('mean IU', np.nanmean(iu))
         freq = hist.sum(1) / hist.sum()
-        print 'fwavacc', (freq[freq > 0] * iu[freq > 0]).sum()
+        print('fwavacc', (freq[freq > 0] * iu[freq > 0]).sum())
 
         filename = os.path.join(output_dir, 'segmentation.txt')
         with open(filename, 'wt') as f:
@@ -671,13 +671,13 @@ class lov(datasets.imdb):
 
         # pose accuracy
         if cfg.TEST.POSE_REG:
-            for i in xrange(1, self.num_classes):
-                print '{} correct poses: {}, all poses: {}, accuracy: {}'.format(self.classes[i], count_correct[i], count_all[i], float(count_correct[i]) / float(count_all[i]))
+            for i in range(1, self.num_classes):
+                print('{} correct poses: {}, all poses: {}, accuracy: {}'.format(self.classes[i], count_correct[i], count_all[i], float(count_correct[i]) / float(count_all[i])))
                 if cfg.TEST.POSE_REFINE:
-                    print '{} correct poses after refinement: {}, all poses: {}, accuracy: {}'.format( \
-                        self.classes[i], count_correct_refined[i], count_all[i], float(count_correct_refined[i]) / float(count_all[i]))
-                    print '{} correct poses after ICP: {}, all poses: {}, accuracy: {}'.format( \
-                        self.classes[i], count_correct_icp[i], count_all[i], float(count_correct_icp[i]) / float(count_all[i]))
+                    print('{} correct poses after refinement: {}, all poses: {}, accuracy: {}'.format( \
+                        self.classes[i], count_correct_refined[i], count_all[i], float(count_correct_refined[i]) / float(count_all[i])))
+                    print('{} correct poses after ICP: {}, all poses: {}, accuracy: {}'.format( \
+                        self.classes[i], count_correct_icp[i], count_all[i], float(count_correct_icp[i]) / float(count_all[i])))
 
 
 if __name__ == '__main__':

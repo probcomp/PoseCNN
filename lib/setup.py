@@ -47,7 +47,7 @@ def locate_cuda():
     cudaconfig = {'home':home, 'nvcc':nvcc,
                   'include': pjoin(home, 'include'),
                   'lib64': pjoin(home, 'lib64')}
-    for k, v in cudaconfig.iteritems():
+    for k, v in cudaconfig.items():
         if not os.path.exists(v):
             raise EnvironmentError('The CUDA %s path could not be located in %s' % (k, v))
 
@@ -120,7 +120,7 @@ ext_modules = [
                                      '-c',
                                      '--compiler-options',
                                      "'-fPIC'"]},
-        include_dirs = [numpy_include, CUDA['include'], '/usr/local/include/eigen3']
+        include_dirs = [numpy_include, CUDA['include'], '/usr/include/eigen3']
     ),
     Extension(
         "utils.cython_bbox",

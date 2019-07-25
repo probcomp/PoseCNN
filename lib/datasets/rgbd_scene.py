@@ -4,7 +4,7 @@ import os
 import datasets
 import datasets.rgbd_scene
 import datasets.imdb
-import cPickle
+import pickle
 import numpy as np
 import cv2
 
@@ -18,7 +18,7 @@ class rgbd_scene(datasets.imdb):
         self._classes = ('__background__', 'bowl', 'cap', 'cereal_box', 'coffee_mug', 'coffee_table', 'office_chair', 'soda_can', 'sofa', 'table')
         self._class_colors = [(255, 255, 255), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255), (128, 0, 0), (0, 128, 0), (0, 0, 128)]
         self._class_weights = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
+        self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
         self._image_ext = '.png'
         self._image_index = self._load_image_set_index()
         self._roidb_handler = self.gt_roidb
@@ -123,16 +123,16 @@ class rgbd_scene(datasets.imdb):
         cache_file = os.path.join(self.cache_path, self.name + '_gt_roidb.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                roidb = cPickle.load(fid)
-            print '{} gt roidb loaded from {}'.format(self.name, cache_file)
+                roidb = pickle.load(fid)
+            print('{} gt roidb loaded from {}'.format(self.name, cache_file))
             return roidb
 
         gt_roidb = [self._load_rgbd_scene_annotation(index)
                     for index in self.image_index]
 
         with open(cache_file, 'wb') as fid:
-            cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
-        print 'wrote gt roidb to {}'.format(cache_file)
+            pickle.dump(gt_roidb, fid, pickle.HIGHEST_PROTOCOL)
+        print('wrote gt roidb to {}'.format(cache_file))
 
         return gt_roidb
 
@@ -177,7 +177,7 @@ class rgbd_scene(datasets.imdb):
 
         # label image is in BGR order
         index = label_image[:,:,2] + 256*label_image[:,:,1] + 256*256*label_image[:,:,0]
-        for i in xrange(len(class_colors)):
+        for i in range(len(class_colors)):
             color = class_colors[i]
             ind = color[0] + 256*color[1] + 256*256*color[2]
             I = np.where(index == ind)
@@ -194,7 +194,7 @@ class rgbd_scene(datasets.imdb):
         image_g = np.zeros((height, width), dtype=np.float32)
         image_b = np.zeros((height, width), dtype=np.float32)
 
-        for i in xrange(len(class_colors)):
+        for i in range(len(class_colors)):
             color = class_colors[i]
             I = np.where(labels == i)
             image_r[I] = color[0]
@@ -210,7 +210,7 @@ class rgbd_scene(datasets.imdb):
 
 
     def evaluate_segmentations(self, segmentations, output_dir):
-        print 'evaluating segmentations'
+        print('evaluating segmentations')
         # compute histogram
         n_cl = self.num_classes
         hist = np.zeros((n_cl, n_cl))
@@ -261,18 +261,18 @@ class rgbd_scene(datasets.imdb):
 
         # overall accuracy
         acc = np.diag(hist).sum() / hist.sum()
-        print 'overall accuracy', acc
+        print('overall accuracy', acc)
         # per-class accuracy
         acc = np.diag(hist) / hist.sum(1)
-        print 'mean accuracy', np.nanmean(acc)
+        print('mean accuracy', np.nanmean(acc))
         # per-class IU
-        print 'per-class IU'
+        print('per-class IU')
         iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
         for i in range(n_cl):
-            print '{} {}'.format(self._classes[i], iu[i])
-        print 'mean IU', np.nanmean(iu)
+            print('{} {}'.format(self._classes[i], iu[i]))
+        print('mean IU', np.nanmean(iu))
         freq = hist.sum(1) / hist.sum()
-        print 'fwavacc', (freq[freq > 0] * iu[freq > 0]).sum()
+        print('fwavacc', (freq[freq > 0] * iu[freq > 0]).sum())
 
         filename = os.path.join(output_dir, 'segmentation.txt')
         with open(filename, 'wt') as f:

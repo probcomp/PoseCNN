@@ -53,7 +53,7 @@ class SolverWrapper(object):
         filename = os.path.join(self.output_dir, filename)
 
         self.saver.save(sess, filename, write_meta_graph=False)
-        print 'Wrote snapshot to: {:s}'.format(filename)
+        print('Wrote snapshot to: {:s}'.format(filename))
 
     def restore(self, session, save_file):
         reader = tf.train.NewCheckpointReader(save_file)
@@ -75,20 +75,20 @@ class SolverWrapper(object):
                 var_shape = curr_var.get_shape().as_list()
                 if var_shape == saved_shapes[saved_var_name]:
                     restore_vars.append(curr_var)
-                    print(str(saved_var_name))
+                    print((str(saved_var_name)))
                     restored_var_names.add(saved_var_name)
                 else:
-                    print('Shape mismatch for var', saved_var_name, 'expected', var_shape, 'got', saved_shapes[saved_var_name])
+                    print(('Shape mismatch for var', saved_var_name, 'expected', var_shape, 'got', saved_shapes[saved_var_name]))
         ignored_var_names = sorted(list(set(saved_shapes.keys()) - restored_var_names))
         if len(ignored_var_names) == 0:
             print('Restored all variables')
         else:
-            print('Did not restore:' + '\n\t'.join(ignored_var_names))
+            print(('Did not restore:' + '\n\t'.join(ignored_var_names)))
 
         if len(restore_vars) > 0:
             saver = tf.train.Saver(restore_vars)
             saver.restore(session, save_file)
-        print('Restored %s' % save_file)
+        print(('Restored %s' % save_file))
 
 
     def train_model(self, sess, train_op, loss, learning_rate, max_iters, data_layer):
@@ -101,14 +101,14 @@ class SolverWrapper(object):
         # intialize variables
         sess.run(tf.global_variables_initializer())
         if self.pretrained_model is not None:
-            print ('Loading pretrained model '
-                   'weights from {:s}').format(self.pretrained_model)
+            print(('Loading pretrained model '
+                   'weights from {:s}').format(self.pretrained_model))
             self.net.load(self.pretrained_model, sess, True)
 
-        print self.pretrained_ckpt
+        print(self.pretrained_ckpt)
         if self.pretrained_ckpt is not None:
-            print ('Loading pretrained ckpt '
-                   'weights from {:s}').format(self.pretrained_ckpt)
+            print(('Loading pretrained ckpt '
+                   'weights from {:s}').format(self.pretrained_ckpt))
             self.restore(sess, self.pretrained_ckpt)
 
         tf.get_default_graph().finalize()
@@ -128,11 +128,11 @@ class SolverWrapper(object):
             train_writer.add_summary(summary, iter)
             timer.toc()
             
-            print 'iter: %d / %d, loss: %.4f, lr: %.8f, time: %.2f' %\
-                    (iter+1, max_iters, loss_value, lr, timer.diff)
+            print('iter: %d / %d, loss: %.4f, lr: %.8f, time: %.2f' %\
+                    (iter+1, max_iters, loss_value, lr, timer.diff))
 
             if (iter+1) % (10 * cfg.TRAIN.DISPLAY) == 0:
-                print 'speed: {:.3f}s / iter'.format(timer.average_time)
+                print('speed: {:.3f}s / iter'.format(timer.average_time))
 
             if (iter+1) % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = iter
@@ -156,13 +156,13 @@ class SolverWrapper(object):
         # intialize variables
         sess.run(tf.global_variables_initializer())
         if self.pretrained_model is not None:
-            print ('Loading pretrained model '
-                   'weights from {:s}').format(self.pretrained_model)
+            print(('Loading pretrained model '
+                   'weights from {:s}').format(self.pretrained_model))
             self.net.load(self.pretrained_model, sess, True)
 
         if self.pretrained_ckpt is not None:
-            print ('Loading pretrained ckpt '
-                   'weights from {:s}').format(self.pretrained_ckpt)
+            print(('Loading pretrained ckpt '
+                   'weights from {:s}').format(self.pretrained_ckpt))
             self.restore(sess, self.pretrained_ckpt)
 
         tf.get_default_graph().finalize()
@@ -185,11 +185,11 @@ class SolverWrapper(object):
             # train_writer.add_summary(summary, iter)
             timer.toc()
             
-            print 'iter: %d / %d, loss: %.4f, loss_cls: %.4f, loss_vertex: %.4f, loss_regu: %.12f, lr: %.8f, time: %.2f' %\
-                    (iter+1, max_iters, loss_value, loss_cls_value, loss_vertex_value, loss_regu_value, lr, timer.diff)
+            print('iter: %d / %d, loss: %.4f, loss_cls: %.4f, loss_vertex: %.4f, loss_regu: %.12f, lr: %.8f, time: %.2f' %\
+                    (iter+1, max_iters, loss_value, loss_cls_value, loss_vertex_value, loss_regu_value, lr, timer.diff))
 
             if (iter+1) % (10 * cfg.TRAIN.DISPLAY) == 0:
-                print 'speed: {:.3f}s / iter'.format(timer.average_time)
+                print('speed: {:.3f}s / iter'.format(timer.average_time))
 
             if (iter+1) % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = iter
@@ -220,13 +220,13 @@ class SolverWrapper(object):
         # intialize variables
         sess.run(tf.global_variables_initializer())
         if self.pretrained_model is not None:
-            print ('Loading pretrained model '
-                   'weights from {:s}').format(self.pretrained_model)
+            print(('Loading pretrained model '
+                   'weights from {:s}').format(self.pretrained_model))
             self.net.load(self.pretrained_model, sess, True)
 
         if self.pretrained_ckpt is not None:
-            print ('Loading pretrained ckpt '
-                   'weights from {:s}').format(self.pretrained_ckpt)
+            print(('Loading pretrained ckpt '
+                   'weights from {:s}').format(self.pretrained_ckpt))
             self.restore(sess, self.pretrained_ckpt)
 
         tf.get_default_graph().finalize()
@@ -242,11 +242,11 @@ class SolverWrapper(object):
             # train_writer.add_summary(summary, iter)
             timer.toc()
             
-            print 'iter: %d / %d, loss: %.4f, loss_cls: %.4f, loss_vertex: %.4f, loss_pose: %.4f, lr: %.8f,  time: %.2f' %\
-                    (iter+1, max_iters, loss_value, loss_cls_value, loss_vertex_value, loss_pose_value, lr, timer.diff)
+            print('iter: %d / %d, loss: %.4f, loss_cls: %.4f, loss_vertex: %.4f, loss_pose: %.4f, lr: %.8f,  time: %.2f' %\
+                    (iter+1, max_iters, loss_value, loss_cls_value, loss_vertex_value, loss_pose_value, lr, timer.diff))
 
             if (iter+1) % (10 * cfg.TRAIN.DISPLAY) == 0:
-                print 'speed: {:.3f}s / iter'.format(timer.average_time)
+                print('speed: {:.3f}s / iter'.format(timer.average_time))
 
             if (iter+1) % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = iter
@@ -274,13 +274,13 @@ class SolverWrapper(object):
         # intialize variables
         sess.run(tf.global_variables_initializer())
         if self.pretrained_model is not None:
-            print ('Loading pretrained model '
-                   'weights from {:s}').format(self.pretrained_model)
+            print(('Loading pretrained model '
+                   'weights from {:s}').format(self.pretrained_model))
             self.net.load(self.pretrained_model, sess, True)
 
         if self.pretrained_ckpt is not None:
-            print ('Loading pretrained ckpt '
-                   'weights from {:s}').format(self.pretrained_ckpt)
+            print(('Loading pretrained ckpt '
+                   'weights from {:s}').format(self.pretrained_ckpt))
             self.restore(sess, self.pretrained_ckpt)
 
         tf.get_default_graph().finalize()
@@ -294,13 +294,13 @@ class SolverWrapper(object):
             # train_writer.add_summary(summary, iter)
             timer.toc()
             
-            print 'iter: %d / %d, loss: %.4f, loss_cls: %.4f, loss_vertex: %.4f, loss_pose: %.4f, loss_domain: %.4f, lr: %.8f,  time: %.2f' %\
-                    (iter+1, max_iters, loss_value, loss_cls_value, loss_vertex_value, loss_pose_value, loss_domain_value, lr, timer.diff)
-            print label_domain_value
-            print domain_label_value
+            print('iter: %d / %d, loss: %.4f, loss_cls: %.4f, loss_vertex: %.4f, loss_pose: %.4f, loss_domain: %.4f, lr: %.8f,  time: %.2f' %\
+                    (iter+1, max_iters, loss_value, loss_cls_value, loss_vertex_value, loss_pose_value, loss_domain_value, lr, timer.diff))
+            print(label_domain_value)
+            print(domain_label_value)
 
             if (iter+1) % (10 * cfg.TRAIN.DISPLAY) == 0:
-                print 'speed: {:.3f}s / iter'.format(timer.average_time)
+                print('speed: {:.3f}s / iter'.format(timer.average_time))
 
             if (iter+1) % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = iter
@@ -324,13 +324,13 @@ class SolverWrapper(object):
         # intialize variables
         sess.run(tf.global_variables_initializer())
         if self.pretrained_model is not None:
-            print ('Loading pretrained model '
-                   'weights from {:s}').format(self.pretrained_model)
+            print(('Loading pretrained model '
+                   'weights from {:s}').format(self.pretrained_model))
             self.net.load(self.pretrained_model, sess, True)
 
         if self.pretrained_ckpt is not None:
-            print ('Loading pretrained ckpt '
-                   'weights from {:s}').format(self.pretrained_ckpt)
+            print(('Loading pretrained ckpt '
+                   'weights from {:s}').format(self.pretrained_ckpt))
             self.restore(sess, self.pretrained_ckpt)
 
         tf.get_default_graph().finalize()
@@ -352,11 +352,11 @@ class SolverWrapper(object):
             # train_writer.add_summary(summary, iter)
             timer.toc()
             
-            print 'iter: %d / %d, loss: %.4f, loss_rpn_cls: %.4f, loss_rpn_box: %.4f, loss_cls: %.4f, loss_box: %.4f, loss_pose: %.4f, lr: %.8f, time: %.2f' %\
-                    (iter+1, max_iters, loss_value, loss_rpn_cls_value, loss_rpn_box_value, loss_cls_value, loss_box_value, loss_pose_value, lr, timer.diff)
+            print('iter: %d / %d, loss: %.4f, loss_rpn_cls: %.4f, loss_rpn_box: %.4f, loss_cls: %.4f, loss_box: %.4f, loss_pose: %.4f, lr: %.8f, time: %.2f' %\
+                    (iter+1, max_iters, loss_value, loss_rpn_cls_value, loss_rpn_box_value, loss_cls_value, loss_box_value, loss_pose_value, lr, timer.diff))
 
             if (iter+1) % (10 * cfg.TRAIN.DISPLAY) == 0:
-                print 'speed: {:.3f}s / iter'.format(timer.average_time)
+                print('speed: {:.3f}s / iter'.format(timer.average_time))
 
             if (iter+1) % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = iter
@@ -373,9 +373,9 @@ class SolverWrapper(object):
 def get_training_roidb(imdb):
     """Returns a roidb (Region of Interest database) for use in training."""
     if cfg.TRAIN.USE_FLIPPED:
-        print 'Appending horizontally-flipped training examples...'
+        print('Appending horizontally-flipped training examples...')
         imdb.append_flipped_images()
-        print 'done'
+        print('done')
 
     return imdb.roidb
 
@@ -547,7 +547,7 @@ def train_net(network, imdb, roidb, output_dir, pretrained_model=None, pretraine
 
         sw = SolverWrapper(sess, network, imdb, roidb, output_dir, pretrained_model=pretrained_model, pretrained_ckpt=pretrained_ckpt)
 
-        print 'Solving...'
+        print('Solving...')
         if cfg.TRAIN.VERTEX_REG_2D or cfg.TRAIN.VERTEX_REG_3D:
             if cfg.TRAIN.POSE_REG:
                 if cfg.TRAIN.ADAPT:
@@ -559,7 +559,7 @@ def train_net(network, imdb, roidb, output_dir, pretrained_model=None, pretraine
                 sw.train_model_vertex(sess, train_op, loss, loss_cls, loss_vertex, loss_regu, learning_rate, max_iters, data_layer)
         else:
             sw.train_model(sess, train_op, loss, learning_rate, max_iters, data_layer)
-        print 'done solving'
+        print('done solving')
 
 def smooth_l1_loss_vertex(vertex_pred, vertex_targets, vertex_weights, sigma=1.0):
     sigma_2 = sigma ** 2
@@ -647,6 +647,6 @@ def train_net_det(network, imdb, roidb, output_dir, pretrained_model=None, pretr
         # thread to load data
         data_layer = GtSynthesizeLayer(roidb, imdb.num_classes, imdb._extents, imdb._points_all, imdb._symmetry, imdb.cache_path, imdb.name, cfg.CAD, cfg.POSE)
 
-        print 'Solving...'
+        print('Solving...')
         sw.train_model_det(sess, train_op, loss, loss_rpn_cls, loss_rpn_box, loss_cls, loss_box, loss_pose, learning_rate, max_iters, data_layer)
-        print 'done solving'
+        print('done solving')

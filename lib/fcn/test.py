@@ -18,7 +18,7 @@ from utils.bbox_transform import clip_boxes, bbox_transform_inv
 from utils.nms import nms
 import numpy as np
 import cv2
-import cPickle
+import pickle
 import os
 import math
 import tensorflow as tf
@@ -199,21 +199,21 @@ def im_segment_single_frame(sess, net, im, im_depth, meta_data, voxelizer, exten
                 rois = rois[keep, :]
                 poses_init = poses_init[keep, :]
                 poses_pred = poses_pred[keep, :]
-                print keep
-                print rois
+                print(keep)
+                print(rois)
 
                 # combine poses
                 num = rois.shape[0]
                 poses = poses_init
-                for i in xrange(num):
+                for i in range(num):
                     class_id = int(rois[i, 1])
                     if class_id >= 0:
                         poses[i, :4] = poses_pred[i, 4*class_id:4*class_id+4]
             else:
                 labels_2d, probs, vertex_pred, rois, poses = \
                     sess.run([net.get_output('label_2d'), net.get_output('prob_normalized'), net.get_output('vertex_pred'), net.get_output('rois'), net.get_output('poses_init')])
-                print rois
-                print rois.shape
+                print(rois)
+                print((rois.shape))
                 # non-maximum suppression
                 # keep = nms(rois[:, 2:], 0.5)
                 # rois = rois[keep, :]
@@ -385,16 +385,16 @@ def test_net(sess, net, imdb, weights_filename, rig_filename, is_kfusion):
         os.makedirs(output_dir)
 
     seg_file = os.path.join(output_dir, 'segmentations.pkl')
-    print imdb.name
+    print((imdb.name))
     if os.path.exists(seg_file):
         with open(seg_file, 'rb') as fid:
-            segmentations = cPickle.load(fid)
+            segmentations = pickle.load(fid)
         imdb.evaluate_segmentations(segmentations, output_dir)
         return
 
     """Test a FCN on an image database."""
     num_images = len(imdb.image_index)
-    segmentations = [[] for _ in xrange(num_images)]
+    segmentations = [[] for _ in range(num_images)]
 
     # timers
     _t = {'im_segment' : Timer(), 'misc' : Timer()}
@@ -418,7 +418,7 @@ def test_net(sess, net, imdb, weights_filename, rig_filename, is_kfusion):
     if cfg.TEST.VISUALIZE:
         perm = np.random.permutation(np.arange(num_images))
     else:
-        perm = xrange(num_images)
+        perm = list(range(num_images))
 
     video_index = ''
     have_prediction = False
@@ -443,7 +443,7 @@ def test_net(sess, net, imdb, weights_filename, rig_filename, is_kfusion):
                 state = np.zeros((1, height, width, cfg.TRAIN.NUM_UNITS), dtype=np.float32)
                 weights = np.ones((1, height, width, cfg.TRAIN.NUM_UNITS), dtype=np.float32)
                 points = np.zeros((1, height, width, 3), dtype=np.float32)
-                print 'start video {}'.format(video_index)
+                print(('start video {}'.format(video_index)))
 
         # read color image
         if rgba.shape[2] == 4:
@@ -541,15 +541,15 @@ def test_net(sess, net, imdb, weights_filename, rig_filename, is_kfusion):
                 im_label_gt[:,:,2] = labels_gt[:,:,0]
             vis_segmentations(im, im_depth, im_label, im_label_gt, imdb._class_colors)
 
-        print 'im_segment: {:d}/{:d} {:.3f}s {:.3f}s' \
-              .format(i + 1, num_images, _t['im_segment'].diff, _t['misc'].diff)
+        print(('im_segment: {:d}/{:d} {:.3f}s {:.3f}s' \
+              .format(i + 1, num_images, _t['im_segment'].diff, _t['misc'].diff)))
 
     if is_kfusion:
         KF.draw(filename, 1)
 
     seg_file = os.path.join(output_dir, 'segmentations.pkl')
     with open(seg_file, 'wb') as f:
-        cPickle.dump(segmentations, f, cPickle.HIGHEST_PROTOCOL)
+        pickle.dump(segmentations, f, pickle.HIGHEST_PROTOCOL)
 
     # evaluation
     imdb.evaluate_segmentations(segmentations, output_dir)
@@ -562,7 +562,7 @@ def _vote_centers(im_label, cls_indexes, centers, poses, num_classes, extents):
     vertex_targets = np.zeros((height, width, 3), dtype=np.float32)
 
     center = np.zeros((2, 1), dtype=np.float32)
-    for i in xrange(1, num_classes):
+    for i in range(1, num_classes):
         y, x = np.where(im_label == i)
         I = np.where(im_label == i)
         ind = np.where(cls_indexes == i)[0]
@@ -589,7 +589,7 @@ def _extract_vertmap(im_label, vertex_pred, extents, num_classes):
     width = im_label.shape[1]
     vertmap = np.zeros((height, width, 3), dtype=np.float32)
 
-    for i in xrange(1, num_classes):
+    for i in range(1, num_classes):
         I = np.where(im_label == i)
         if len(I[0]) > 0:
             start = 3 * i
@@ -604,7 +604,7 @@ def _generate_vertex_targets(im_label, num_classes, vertmap, extents):
     height = im_label.shape[0]
     vertex_targets = np.zeros((height, width, 3), dtype=np.float32)
 
-    for i in xrange(1, num_classes):
+    for i in range(1, num_classes):
         y, x = np.where(im_label == i)
         I = np.where(im_label == i)
         if len(x) > 0:
@@ -681,7 +681,7 @@ def vis_segmentations_vertmaps(im, im_depth, im_labels, im_labels_gt, colors, ce
 
     if cfg.TEST.VERTEX_REG_2D:
         # show centers
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             if rois[i, 1] == 0:
                 continue
             cx = (rois[i, 2] + rois[i, 4]) / 2
@@ -715,7 +715,7 @@ def vis_segmentations_vertmaps(im, im_depth, im_labels, im_labels_gt, colors, ce
         ax = fig.add_subplot(3, 4, 2, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(1, num_classes):
+        for i in range(1, num_classes):
             index = np.where(labels_gt == i)
             if len(index[0]) > 0:
                 # extract 3D points
@@ -748,7 +748,7 @@ def vis_segmentations_vertmaps(im, im_depth, im_labels, im_labels_gt, colors, ce
         ax = fig.add_subplot(3, 4, 3, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             cls = int(rois[i, 1])
             index = np.where(labels_gt == cls)
             if len(index[0]) > 0 and cls > 0:
@@ -784,7 +784,7 @@ def vis_segmentations_vertmaps(im, im_depth, im_labels, im_labels_gt, colors, ce
             ax = fig.add_subplot(3, 4, 4, aspect='equal')
             plt.imshow(im)
             ax.invert_yaxis()
-            for i in xrange(rois.shape[0]):
+            for i in range(rois.shape[0]):
                 cls = int(rois[i, 1])
                 index = np.where(labels_gt == cls)
                 if len(index[0]) > 0 and cls > 0:
@@ -837,7 +837,7 @@ def vis_segmentations_vertmaps_detection(im, im_depth, im_labels, colors, center
 
     if cfg.TEST.VERTEX_REG_2D:
         # show centers
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             if rois[i, 1] == 0:
                 continue
             cx = (rois[i, 2] + rois[i, 4]) / 2
@@ -871,7 +871,7 @@ def vis_segmentations_vertmaps_detection(im, im_depth, im_labels, colors, center
         ax = fig.add_subplot(3, 3, 7, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             cls = int(rois[i, 1])
             if cls > 0:
                 # extract 3D points
@@ -884,9 +884,9 @@ def vis_segmentations_vertmaps_detection(im, im_depth, im_labels, colors, center
                 RT = np.zeros((3, 4), dtype=np.float32)
                 RT[:3, :3] = quat2mat(poses[i, :4])
                 RT[:, 3] = poses[i, 4:7]
-                print classes[cls]
-                print RT
-                print '\n'
+                print((classes[cls]))
+                print(RT)
+                print('\n')
                 x2d = np.matmul(intrinsic_matrix, np.matmul(RT, x3d))
                 x2d[0, :] = np.divide(x2d[0, :], x2d[2, :])
                 x2d[1, :] = np.divide(x2d[1, :], x2d[2, :])
@@ -902,7 +902,7 @@ def vis_segmentations_vertmaps_detection(im, im_depth, im_labels, colors, center
             ax = fig.add_subplot(3, 3, 8, aspect='equal')
             plt.imshow(im)
             ax.invert_yaxis()
-            for i in xrange(rois.shape[0]):
+            for i in range(rois.shape[0]):
                 cls = int(rois[i, 1])
                 if cls > 0:
                     # extract 3D points
@@ -915,9 +915,9 @@ def vis_segmentations_vertmaps_detection(im, im_depth, im_labels, colors, center
                     RT = np.zeros((3, 4), dtype=np.float32)
                     RT[:3, :3] = quat2mat(poses_new[i, :4])
                     RT[:, 3] = poses_new[i, 4:7]
-                    print cls
-                    print RT
-                    print '\n'
+                    print(cls)
+                    print(RT)
+                    print('\n')
                     x2d = np.matmul(intrinsic_matrix, np.matmul(RT, x3d))
                     x2d[0, :] = np.divide(x2d[0, :], x2d[2, :])
                     x2d[1, :] = np.divide(x2d[1, :], x2d[2, :])
@@ -969,7 +969,7 @@ def vis_segmentations_vertmaps_3d(im, im_depth, im_labels, im_labels_gt, colors,
 
     if cfg.TEST.POSE_REG:
         # show centers
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             cx = (rois[i, 2] + rois[i, 4]) / 2
             cy = (rois[i, 3] + rois[i, 5]) / 2
             w = rois[i, 4] - rois[i, 2]
@@ -1001,7 +1001,7 @@ def vis_segmentations_vertmaps_3d(im, im_depth, im_labels, im_labels_gt, colors,
         ax = fig.add_subplot(3, 4, 2, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(1, num_classes):
+        for i in range(1, num_classes):
             index = np.where(labels_gt == i)
             if len(index[0]) > 0:
                 num = len(index[0])
@@ -1027,7 +1027,7 @@ def vis_segmentations_vertmaps_3d(im, im_depth, im_labels, im_labels_gt, colors,
         ax = fig.add_subplot(3, 4, 3, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(rois_rgb.shape[0]):
+        for i in range(rois_rgb.shape[0]):
             cls = int(rois_rgb[i, 1])
             index = np.where(labels_gt == cls)
             if len(index[0]) > 0:
@@ -1055,7 +1055,7 @@ def vis_segmentations_vertmaps_3d(im, im_depth, im_labels, im_labels_gt, colors,
         ax = fig.add_subplot(3, 4, 4, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             cls = int(rois[i, 1])
             index = np.where(labels_gt == cls)
             if len(index[0]) > 0:
@@ -1084,7 +1084,7 @@ def vis_segmentations_vertmaps_3d(im, im_depth, im_labels, im_labels_gt, colors,
             ax = fig.add_subplot(3, 4, 5, aspect='equal')
             plt.imshow(im)
             ax.invert_yaxis()
-            for i in xrange(rois.shape[0]):
+            for i in range(rois.shape[0]):
                 cls = int(rois[i, 1])
                 index = np.where(labels_gt == cls)
                 if len(index[0]) > 0:
@@ -1158,10 +1158,10 @@ def test_net_single_frame(sess, net, imdb, weights_filename, model_filename):
         os.makedirs(output_dir)
 
     seg_file = os.path.join(output_dir, 'segmentations.pkl')
-    print imdb.name
+    print((imdb.name))
     if os.path.exists(seg_file):
         with open(seg_file, 'rb') as fid:
-            segmentations = cPickle.load(fid)
+            segmentations = pickle.load(fid)
         imdb.evaluate_segmentations(segmentations, output_dir)
         return
 
@@ -1170,7 +1170,7 @@ def test_net_single_frame(sess, net, imdb, weights_filename, model_filename):
         num_images = cfg.TRAIN.SYNNUM
     else:
         num_images = len(imdb.image_index)
-    segmentations = [[] for _ in xrange(num_images)]
+    segmentations = [[] for _ in range(num_images)]
 
     # timers
     _t = {'im_segment' : Timer(), 'misc' : Timer()}
@@ -1190,17 +1190,17 @@ def test_net_single_frame(sess, net, imdb, weights_filename, model_filename):
         perm = np.random.permutation(np.arange(num_images))
         # perm = xrange(num_images)
     else:
-        perm = xrange(num_images)
+        perm = list(range(num_images))
 
     if cfg.TEST.SYNTHETIC:
         # perm = np.random.permutation(np.arange(cfg.TRAIN.SYNNUM))
-        perm = xrange(cfg.TRAIN.SYNNUM)
+        perm = list(range(cfg.TRAIN.SYNNUM))
 
         cache_file = cfg.BACKGROUND
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                backgrounds = cPickle.load(fid)
-            print 'backgrounds loaded from {}'.format(cache_file)
+                backgrounds = pickle.load(fid)
+            print(('backgrounds loaded from {}'.format(cache_file)))
 
     if (cfg.TEST.VERTEX_REG_2D and cfg.TEST.POSE_REFINE) or (cfg.TEST.VERTEX_REG_3D and cfg.TEST.POSE_REG):
         import libsynthesizer
@@ -1226,11 +1226,11 @@ def test_net_single_frame(sess, net, imdb, weights_filename, model_filename):
                         background = np.zeros((rgba.shape[0], rgba.shape[1]), dtype=np.uint16)
                     else:
                         background = np.zeros((rgba.shape[0], rgba.shape[1], 3), dtype=np.uint8)
-                    print 'bad background image'
+                    print('bad background image')
 
                 if cfg.INPUT != 'DEPTH' and cfg.INPUT != 'NORMAL' and len(background.shape) != 3:
                     background = np.zeros((rgba.shape[0], rgba.shape[1], 3), dtype=np.uint8)
-                    print 'bad background image'
+                    print('bad background image')
 
                 # add background
                 im = np.copy(rgba[:,:,:3])
@@ -1363,42 +1363,42 @@ def test_net_single_frame(sess, net, imdb, weights_filename, model_filename):
             poses_tmp = np.zeros((3, 4, imdb.num_classes), dtype=np.float32)            
             SYN.estimate_poses_2d(labels, vertex_pred, imdb._extents, poses_tmp, imdb.num_classes, fx, fy, px, py)
             num = 0
-            for j in xrange(imdb.num_classes):
+            for j in range(imdb.num_classes):
                 if poses_tmp[2, 3, j] > 0:
                     num += 1
             rois_rgb = np.zeros((num, 6), dtype=np.float32)
             poses_rgb = np.zeros((num, 7), dtype=np.float32)
             count = 0
-            for j in xrange(imdb.num_classes):
+            for j in range(imdb.num_classes):
                 if poses_tmp[2, 3, j] > 0:
                     rois_rgb[count, 1] = j
                     poses_rgb[count, :4] = mat2quat(poses_tmp[:3, :3, j])
                     poses_rgb[count, 4:] = poses_tmp[:, 3, j]
                     rois_rgb[count, 2:] = _get_bb2D(imdb._extents[j, :], poses_rgb[count, :], meta_data['intrinsic_matrix']) * im_scale
                     count += 1
-            print rois_rgb
-            print poses_rgb
+            print(rois_rgb)
+            print(poses_rgb)
 
             # pose estimation with depth
             poses_tmp = np.zeros((3, 4, imdb.num_classes), dtype=np.float32)
             im_depth = cv2.resize(im_depth, None, None, fx=im_scale, fy=im_scale, interpolation=cv2.INTER_LINEAR)
             SYN.estimate_poses_3d(labels, im_depth, vertex_pred, imdb._extents, poses_tmp, imdb.num_classes, fx, fy, px, py, factor)
             num = 0
-            for j in xrange(imdb.num_classes):
+            for j in range(imdb.num_classes):
                 if poses_tmp[2, 3, j] > 0:
                     num += 1
             rois = np.zeros((num, 6), dtype=np.float32)
             poses = np.zeros((num, 7), dtype=np.float32)
             count = 0
-            for j in xrange(imdb.num_classes):
+            for j in range(imdb.num_classes):
                 if poses_tmp[2, 3, j] > 0:
                     rois[count, 1] = j
                     poses[count, :4] = mat2quat(poses_tmp[:3, :3, j])
                     poses[count, 4:] = poses_tmp[:, 3, j]
                     rois[count, 2:] = _get_bb2D(imdb._extents[j, :], poses[count, :], meta_data['intrinsic_matrix']) * im_scale
                     count += 1
-            print rois
-            print poses
+            print(rois)
+            print(poses)
 
             # pose refinement
             poses_new = np.zeros((poses.shape[0], 7), dtype=np.float32)        
@@ -1426,8 +1426,8 @@ def test_net_single_frame(sess, net, imdb, weights_filename, model_filename):
         segmentations[i] = seg
         _t['misc'].toc()
 
-        print 'im_segment: {:d}/{:d} {:.3f}s {:.3f}s' \
-              .format(i, num_images, _t['im_segment'].diff, _t['misc'].diff)
+        print(('im_segment: {:d}/{:d} {:.3f}s {:.3f}s' \
+              .format(i, num_images, _t['im_segment'].diff, _t['misc'].diff)))
 
         imdb.evaluate_result(i, seg, labels_gt, meta_data, output_dir)
         if cfg.TEST.VISUALIZE:
@@ -1476,10 +1476,10 @@ def test_net_detection(sess, net, imdb, weights_filename):
         os.makedirs(output_dir)
 
     det_file = os.path.join(output_dir, 'detections.pkl')
-    print imdb.name
+    print((imdb.name))
     if os.path.exists(det_file):
         with open(det_file, 'rb') as fid:
-            detections = cPickle.load(fid)
+            detections = pickle.load(fid)
         imdb.evaluate_detections(detections, output_dir)
         return
 
@@ -1488,7 +1488,7 @@ def test_net_detection(sess, net, imdb, weights_filename):
         num_images = cfg.TRAIN.SYNNUM
     else:
         num_images = len(imdb.image_index)
-    detections = [[] for _ in xrange(num_images)]
+    detections = [[] for _ in range(num_images)]
 
     # timers
     _t = {'im_detect' : Timer(), 'misc' : Timer()}
@@ -1497,7 +1497,7 @@ def test_net_detection(sess, net, imdb, weights_filename):
         perm = np.random.permutation(np.arange(num_images))
         # perm = xrange(876, num_images)
     else:
-        perm = xrange(num_images)
+        perm = list(range(num_images))
 
     if cfg.TEST.SYNTHETIC:
         perm = np.random.permutation(np.arange(cfg.TRAIN.SYNNUM))
@@ -1505,8 +1505,8 @@ def test_net_detection(sess, net, imdb, weights_filename):
         cache_file = cfg.BACKGROUND
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                backgrounds = cPickle.load(fid)
-            print 'backgrounds loaded from {}'.format(cache_file)
+                backgrounds = pickle.load(fid)
+            print(('backgrounds loaded from {}'.format(cache_file)))
 
     for i in perm:
 
@@ -1523,17 +1523,17 @@ def test_net_detection(sess, net, imdb, weights_filename):
                 background_color = cv2.resize(background_color, (rgba.shape[1], rgba.shape[0]), interpolation=cv2.INTER_LINEAR)
             except:
                 background_color = np.zeros((rgba.shape[0], rgba.shape[1], 3), dtype=np.uint8)
-                print 'bad background image'
+                print('bad background image')
 
             if len(background_color.shape) != 3:
                 background_color = np.zeros((rgba.shape[0], rgba.shape[1], 3), dtype=np.uint8)
-                print 'bad background image'
+                print('bad background image')
 
             # add background
             im = np.copy(rgba[:,:,:3])
             alpha = rgba[:,:,3]
             I = np.where(alpha == 0)
-            print im.shape, background_color.shape
+            print((im.shape, background_color.shape))
             im[I[0], I[1], :] = background_color[I[0], I[1], :]
 
             # depth
@@ -1561,7 +1561,7 @@ def test_net_detection(sess, net, imdb, weights_filename):
             im_depth = pad_im(cv2.imread(imdb.depth_path_at(i), cv2.IMREAD_UNCHANGED), 16)
 
             # load meta data
-            print imdb.metadata_path_at(i)
+            print((imdb.metadata_path_at(i)))
             meta_data = scipy.io.loadmat(imdb.metadata_path_at(i))
         meta_data['cls_indexes'] = meta_data['cls_indexes'].flatten()
 
@@ -1619,8 +1619,8 @@ def test_net_detection(sess, net, imdb, weights_filename):
         detections[i] = det
         _t['misc'].toc()
 
-        print 'im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
-              .format(i, num_images, _t['im_detect'].diff, _t['misc'].diff)
+        print(('im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
+              .format(i, num_images, _t['im_detect'].diff, _t['misc'].diff)))
 
         imdb.evaluate_result_detection(i, det, meta_data, output_dir)
 
@@ -1630,7 +1630,7 @@ def test_net_detection(sess, net, imdb, weights_filename):
 
     det_file = os.path.join(output_dir, 'detections.pkl')
     with open(det_file, 'wb') as f:
-        cPickle.dump(detections, f, cPickle.HIGHEST_PROTOCOL)
+        pickle.dump(detections, f, pickle.HIGHEST_PROTOCOL)
 
     # evaluation
     imdb.evaluate_detections(detections, output_dir)
@@ -1644,7 +1644,7 @@ def compute_translations(dets, poses, points, intrinsic_matrix):
     cy = intrinsic_matrix[1, 2]
     num = dets.shape[0]
     # for each object
-    for i in xrange(num):
+    for i in range(num):
         cls = int(dets[i, 0])
         # object center
         x = (dets[i, 1] + dets[i, 3]) / 2
@@ -1765,7 +1765,7 @@ def vis_detections(im, im_depth, rois, poses, cls_indexes, intrinsic_matrix, pos
     ax.set_title('region proposals')
 
     # show centers
-    for i in xrange(rois.shape[0]):
+    for i in range(rois.shape[0]):
         cls = int(rois[i, 0])
         x1 = rois[i, 1]
         y1 = rois[i, 2]
@@ -1780,7 +1780,7 @@ def vis_detections(im, im_depth, rois, poses, cls_indexes, intrinsic_matrix, pos
         ax = fig.add_subplot(2, 2, 3, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(cls_indexes):
+        for i in range(cls_indexes):
             cls = int(cls_indexes[i])
             x3d = np.ones((4, points.shape[1]), dtype=np.float32)
             x3d[0, :] = points[cls,:,0]
@@ -1803,7 +1803,7 @@ def vis_detections(im, im_depth, rois, poses, cls_indexes, intrinsic_matrix, pos
         ax = fig.add_subplot(2, 2, 4, aspect='equal')
         plt.imshow(im)
         ax.invert_yaxis()
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             cls = int(rois[i, 0])
             x3d = np.ones((4, points.shape[1]), dtype=np.float32)
             x3d[0, :] = points[cls,:,0]
@@ -1837,7 +1837,7 @@ def test_net_images(sess, net, imdb, weights_filename, rgb_filenames, depth_file
         os.makedirs(output_dir)
 
     num_images = len(rgb_filenames)
-    segmentations = [[] for _ in xrange(num_images)]
+    segmentations = [[] for _ in range(num_images)]
 
     # timers
     _t = {'im_segment' : Timer(), 'misc' : Timer()}
@@ -1857,7 +1857,7 @@ def test_net_images(sess, net, imdb, weights_filename, rgb_filenames, depth_file
         perm = np.random.permutation(np.arange(num_images))
         # perm = xrange(num_images)
     else:
-        perm = xrange(num_images)
+        perm = list(range(num_images))
 
     if (cfg.TEST.VERTEX_REG_2D and cfg.TEST.POSE_REFINE) or (cfg.TEST.VERTEX_REG_3D and cfg.TEST.POSE_REG):
         import libsynthesizer
@@ -1868,7 +1868,7 @@ def test_net_images(sess, net, imdb, weights_filename, rgb_filenames, depth_file
 
         # read color image
         rgba = pad_im(cv2.imread(rgb_filenames[i], cv2.IMREAD_UNCHANGED), 16)
-        print rgb_filenames[i]
+        print((rgb_filenames[i]))
         if rgba.shape[2] == 4:
             im = np.copy(rgba[:,:,:3])
             alpha = rgba[:,:,3]
@@ -1941,8 +1941,8 @@ def test_net_images(sess, net, imdb, weights_filename, rgb_filenames, depth_file
         segmentations[i] = seg
         _t['misc'].toc()
 
-        print 'im_segment: {:d}/{:d} {:.3f}s {:.3f}s' \
-              .format(i, num_images, _t['im_segment'].diff, _t['misc'].diff)
+        print(('im_segment: {:d}/{:d} {:.3f}s {:.3f}s' \
+              .format(i, num_images, _t['im_segment'].diff, _t['misc'].diff)))
 
         imdb.save_result(i, seg, output_dir)
 

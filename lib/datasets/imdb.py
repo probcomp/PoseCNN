@@ -103,7 +103,7 @@ class imdb(object):
 
     def append_flipped_images(self):
         num_images = self.num_images
-        for i in xrange(num_images):
+        for i in range(num_images):
             entry = {'image' : self.roidb[i]['image'],
                      'depth' : self.roidb[i]['depth'],
                      'label' : self.roidb[i]['label'],
@@ -114,7 +114,7 @@ class imdb(object):
                      'flipped' : True}
             self.roidb.append(entry)
         self._image_index = self._image_index * 2
-        print 'finish appending flipped images'
+        print('finish appending flipped images')
 
     def competition_mode(self, on):
         """Turn competition mode on or off."""

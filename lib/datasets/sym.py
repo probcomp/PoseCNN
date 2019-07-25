@@ -4,7 +4,7 @@ import os
 import datasets
 import datasets.sym
 import datasets.imdb
-import cPickle
+import pickle
 import numpy as np
 import cv2
 import PIL
@@ -34,7 +34,7 @@ class sym(datasets.imdb):
         self._points, self._points_all = self._load_object_points()
         self._extents = self._load_object_extents()
 
-        self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
+        self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
         self._image_ext = '.png'
         self._image_index = self._load_image_set_index()
         self._roidb_handler = self.gt_roidb
@@ -130,19 +130,19 @@ class sym(datasets.imdb):
 
     def _load_object_points(self):
 
-        points = [[] for _ in xrange(len(self._classes))]
+        points = [[] for _ in range(len(self._classes))]
         num = np.inf
 
-        for i in xrange(1, len(self._classes)):
+        for i in range(1, len(self._classes)):
             point_file = os.path.join(self._sym_path, 'models', self._classes[i] + '.xyz')
-            print point_file
+            print(point_file)
             assert os.path.exists(point_file), 'Path does not exist: {}'.format(point_file)
             points[i] = np.loadtxt(point_file)
             if points[i].shape[0] < num:
                 num = points[i].shape[0]
 
         points_all = np.zeros((self.num_classes, num, 3), dtype=np.float32)
-        for i in xrange(1, len(self._classes)):
+        for i in range(1, len(self._classes)):
             points_all[i, :, :] = points[i][:num, :]
 
         return points[1], points_all
@@ -162,20 +162,20 @@ class sym(datasets.imdb):
 
     def compute_class_weights(self):
 
-        print 'computing class weights'
+        print('computing class weights')
         num_classes = self.num_classes
         count = np.zeros((num_classes,), dtype=np.int64)
         for index in self.image_index:
             # label path
             label_path = self.label_path_from_index(index)
             im = cv2.imread(label_path, cv2.IMREAD_UNCHANGED)
-            for i in xrange(num_classes):
+            for i in range(num_classes):
                 I = np.where(im == i)
                 count[i] += len(I[0])
 
-        for i in xrange(num_classes):
+        for i in range(num_classes):
             self._class_weights[i] = min(float(count[0]) / float(count[i]), 10.0)
-            print self._classes[i], self._class_weights[i]
+            print(self._classes[i], self._class_weights[i])
 
 
     def gt_roidb(self):
@@ -188,9 +188,9 @@ class sym(datasets.imdb):
         cache_file = os.path.join(self.cache_path, self.name + '_gt_roidb.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                roidb = cPickle.load(fid)
-            print '{} gt roidb loaded from {}'.format(self.name, cache_file)
-            print 'class weights: ', roidb[0]['class_weights']
+                roidb = pickle.load(fid)
+            print('{} gt roidb loaded from {}'.format(self.name, cache_file))
+            print('class weights: ', roidb[0]['class_weights'])
             return roidb
 
         # self.compute_class_weights()
@@ -199,8 +199,8 @@ class sym(datasets.imdb):
                     for index in self.image_index]
 
         with open(cache_file, 'wb') as fid:
-            cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
-        print 'wrote gt roidb to {}'.format(cache_file)
+            pickle.dump(gt_roidb, fid, pickle.HIGHEST_PROTOCOL)
+        print('wrote gt roidb to {}'.format(cache_file))
 
         return gt_roidb
 
@@ -239,7 +239,7 @@ class sym(datasets.imdb):
         image_g = np.zeros((height, width), dtype=np.float32)
         image_b = np.zeros((height, width), dtype=np.float32)
 
-        for i in xrange(len(class_colors)):
+        for i in range(len(class_colors)):
             color = class_colors[i]
             I = np.where(labels == i)
             image_r[I] = color[0]
@@ -268,13 +268,13 @@ class sym(datasets.imdb):
         hist += self.fast_hist(gt_labels.flatten(), sg_labels.flatten(), n_cl)
 
         # per-class IU
-        print 'per-class segmentation IoU'
+        print('per-class segmentation IoU')
         intersection = np.diag(hist)
         union = hist.sum(1) + hist.sum(0) - np.diag(hist)
         index = np.where(union > 0)[0]
         for i in range(len(index)):
             ind = index[i]
-            print '{} {}'.format(self._classes[ind], intersection[ind] / union[ind])
+            print('{} {}'.format(self._classes[ind], intersection[ind] / union[ind]))
 
         threshold = 0.1 * np.linalg.norm(self._extents[1, :])
 
@@ -288,7 +288,7 @@ class sym(datasets.imdb):
             # save matlab result
             results = {'labels': sg_labels, 'rois': rois, 'poses': poses, 'poses_refined': poses_new, 'poses_icp': poses_icp}
             filename = os.path.join(mat_dir, '%04d.mat' % im_ind)
-            print filename
+            print(filename)
             scipy.io.savemat(filename, results, do_compression=True)
 
             poses_gt = meta_data['poses']
@@ -296,116 +296,116 @@ class sym(datasets.imdb):
                 poses_gt = np.reshape(poses_gt, (3, 4, 1))
             num = poses_gt.shape[2]
 
-            for j in xrange(num):
+            for j in range(num):
                 if meta_data['cls_indexes'][j] != 1:
                     continue
                 cls = self._classes[1]
-                print cls
-                print 'gt pose'
-                print poses_gt[:, :, j]
+                print(cls)
+                print('gt pose')
+                print(poses_gt[:, :, j])
 
-                for k in xrange(rois.shape[0]):
+                for k in range(rois.shape[0]):
                     if rois[k, 1] != meta_data['cls_indexes'][j]:
                         continue
 
-                    print 'estimated pose'
+                    print('estimated pose')
                     RT = np.zeros((3, 4), dtype=np.float32)
                     RT[:3, :3] = quat2mat(poses[k, :4])
                     RT[:, 3] = poses[k, 4:7]
-                    print RT
+                    print(RT)
 
                     # quaternion loss
-                    print mat2quat(poses_gt[:3, :3, j])
-                    print mat2quat(RT[:3, :3])
+                    print(mat2quat(poses_gt[:3, :3, j]))
+                    print(mat2quat(RT[:3, :3]))
                     d = mat2quat(poses_gt[:3, :3, j]).dot(mat2quat(RT[:3, :3]))
                     loss = 1 - d * d
-                    print 'quaternion loss {}'.format(loss)
+                    print('quaternion loss {}'.format(loss))
 
                     if cfg.TEST.POSE_REFINE:
-                        print 'translation refined pose'
+                        print('translation refined pose')
                         RT_new = np.zeros((3, 4), dtype=np.float32)
                         RT_new[:3, :3] = quat2mat(poses_new[k, :4])
                         RT_new[:, 3] = poses_new[k, 4:7]
-                        print RT_new
+                        print(RT_new)
 
-                        print 'ICP refined pose'
+                        print('ICP refined pose')
                         RT_icp = np.zeros((3, 4), dtype=np.float32)
                         RT_icp[:3, :3] = quat2mat(poses_icp[k, :4])
                         RT_icp[:, 3] = poses_icp[k, 4:7]
-                        print RT_icp
+                        print(RT_icp)
 
                     error_rotation = re(RT[:3, :3], poses_gt[:3, :3, j])
-                    print 'rotation error: {}'.format(error_rotation)
+                    print('rotation error: {}'.format(error_rotation))
 
                     error_translation = te(RT[:, 3], poses_gt[:, 3, j])
-                    print 'translation error: {}'.format(error_translation)
+                    print('translation error: {}'.format(error_translation))
 
                     if cls == 'eggbox' and error_rotation > 90:
                         RT_z = np.array([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0]])
                         RT_sym = se3_mul(RT, RT_z)
-                        print 'eggbox rotation error after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j]))
+                        print('eggbox rotation error after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j])))
                         error_reprojection = reproj(meta_data['intrinsic_matrix'], RT_sym[:3, :3], RT_sym[:, 3], \
                             poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                     else:
                         error_reprojection = reproj(meta_data['intrinsic_matrix'], RT[:3, :3], RT[:, 3], \
                             poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                    print 'reprojection error: {}'.format(error_reprojection)
+                    print('reprojection error: {}'.format(error_reprojection))
 
                     # compute pose error
                     if cls == 'eggbox' or cls == 'glue':
                         error = adi(RT[:3, :3], RT[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                     else:
                         error = add(RT[:3, :3], RT[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                    print 'average distance error: {}\n'.format(error)
+                    print('average distance error: {}\n'.format(error))
 
                     if cfg.TEST.POSE_REFINE:
                         error_rotation_new = re(RT_new[:3, :3], poses_gt[:3, :3, j])
-                        print 'rotation error new: {}'.format(error_rotation_new)
+                        print('rotation error new: {}'.format(error_rotation_new))
 
                         error_translation_new = te(RT_new[:, 3], poses_gt[:, 3, j])
-                        print 'translation error new: {}'.format(error_translation_new)
+                        print('translation error new: {}'.format(error_translation_new))
 
                         if cls == 'eggbox' and error_rotation_new > 90:
                             RT_z = np.array([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0]])
                             RT_sym = se3_mul(RT_new, RT_z)
-                            print 'eggbox rotation error new after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j]))
+                            print('eggbox rotation error new after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j])))
                             error_reprojection_new = reproj(meta_data['intrinsic_matrix'], RT_sym[:3, :3], RT_sym[:, 3], \
                                 poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                         else:
                             error_reprojection_new = reproj(meta_data['intrinsic_matrix'], RT_new[:3, :3], RT_new[:, 3], \
                                 poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                        print 'reprojection error new: {}'.format(error_reprojection_new)
+                        print('reprojection error new: {}'.format(error_reprojection_new))
 
                         if cls == 'eggbox' or cls == 'glue':
                             error_new = adi(RT_new[:3, :3], RT_new[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                         else:
                             error_new = add(RT_new[:3, :3], RT_new[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                        print 'average distance error new: {}\n'.format(error_new)
+                        print('average distance error new: {}\n'.format(error_new))
 
                         error_rotation_icp = re(RT_icp[:3, :3], poses_gt[:3, :3, j])
-                        print 'rotation error icp: {}'.format(error_rotation_icp)
+                        print('rotation error icp: {}'.format(error_rotation_icp))
 
                         error_translation_icp = te(RT_icp[:, 3], poses_gt[:, 3, j])
-                        print 'translation error icp: {}'.format(error_translation_icp)
+                        print('translation error icp: {}'.format(error_translation_icp))
 
                         if cls == 'eggbox' and error_rotation_icp > 90:
                             RT_z = np.array([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0]])
                             RT_sym = se3_mul(RT_icp, RT_z)
-                            print 'eggbox rotation error icp after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j]))
+                            print('eggbox rotation error icp after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j])))
                             error_reprojection_icp = reproj(meta_data['intrinsic_matrix'], RT_sym[:3, :3], RT_sym[:, 3], \
                                 poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                         else:
                             error_reprojection_icp = reproj(meta_data['intrinsic_matrix'], RT_icp[:3, :3], RT_icp[:, 3], \
                                 poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                        print 'reprojection error icp: {}'.format(error_reprojection_icp)
+                        print('reprojection error icp: {}'.format(error_reprojection_icp))
 
                         if cls == 'eggbox' or cls == 'glue':
                             error_icp = adi(RT_icp[:3, :3], RT_icp[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                         else:
                             error_icp = add(RT_icp[:3, :3], RT_icp[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                        print 'average distance error icp: {}'.format(error_icp)
+                        print('average distance error icp: {}'.format(error_icp))
 
-                    print 'threshold: {}'.format(threshold)
+                    print('threshold: {}'.format(threshold))
 
 
     def evaluate_result_detection(self, im_ind, detection, meta_data, output_dir):
@@ -429,7 +429,7 @@ class sym(datasets.imdb):
             # save matlab result
             results = {'rois': rois, 'poses': poses}
             filename = os.path.join(mat_dir, '%04d.mat' % im_ind)
-            print filename
+            print(filename)
             scipy.io.savemat(filename, results, do_compression=True)
 
             poses_gt = meta_data['poses']
@@ -437,60 +437,60 @@ class sym(datasets.imdb):
                 poses_gt = np.reshape(poses_gt, (3, 4, 1))
             num = poses_gt.shape[2]
 
-            for j in xrange(num):
+            for j in range(num):
                 if meta_data['cls_indexes'][j] != 1:
                     continue
                 cls = self._classes[1]
-                print cls
-                print 'gt pose'
-                print poses_gt[:, :, j]
+                print(cls)
+                print('gt pose')
+                print(poses_gt[:, :, j])
 
-                for k in xrange(rois.shape[0]):
+                for k in range(rois.shape[0]):
                     if rois[k, 0] != meta_data['cls_indexes'][j]:
                         continue
 
-                    print 'estimated pose'
+                    print('estimated pose')
                     RT = np.zeros((3, 4), dtype=np.float32)
                     RT[:3, :3] = quat2mat(poses[k, :4])
                     RT[:, 3] = poses[k, 4:7]
-                    print RT
+                    print(RT)
 
                     # quaternion loss
-                    print mat2quat(poses_gt[:3, :3, j])
-                    print mat2quat(RT[:3, :3])
+                    print(mat2quat(poses_gt[:3, :3, j]))
+                    print(mat2quat(RT[:3, :3]))
                     d = mat2quat(poses_gt[:3, :3, j]).dot(mat2quat(RT[:3, :3]))
                     loss = 1 - d * d
-                    print 'quaternion loss {}'.format(loss)
+                    print('quaternion loss {}'.format(loss))
 
                     error_rotation = re(RT[:3, :3], poses_gt[:3, :3, j])
-                    print 'rotation error: {}'.format(error_rotation)
+                    print('rotation error: {}'.format(error_rotation))
 
                     error_translation = te(RT[:, 3], poses_gt[:, 3, j])
-                    print 'translation error: {}'.format(error_translation)
+                    print('translation error: {}'.format(error_translation))
 
                     if cls == 'eggbox' and error_rotation > 90:
                         RT_z = np.array([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0]])
                         RT_sym = se3_mul(RT, RT_z)
-                        print 'eggbox rotation error after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j]))
+                        print('eggbox rotation error after symmetry: {}'.format(re(RT_sym[:3, :3], poses_gt[:3, :3, j])))
                         error_reprojection = reproj(meta_data['intrinsic_matrix'], RT_sym[:3, :3], RT_sym[:, 3], \
                             poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                     else:
                         error_reprojection = reproj(meta_data['intrinsic_matrix'], RT[:3, :3], RT[:, 3], \
                             poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                    print 'reprojection error: {}'.format(error_reprojection)
+                    print('reprojection error: {}'.format(error_reprojection))
 
                     # compute pose error
                     if cls == 'eggbox' or cls == 'glue':
                         error = adi(RT[:3, :3], RT[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
                     else:
                         error = add(RT[:3, :3], RT[:, 3], poses_gt[:3, :3, j], poses_gt[:, 3, j], self._points)
-                    print 'average distance error: {}\n'.format(error)
+                    print('average distance error: {}\n'.format(error))
 
-                    print 'threshold: {}'.format(threshold)
+                    print('threshold: {}'.format(threshold))
 
 
     def evaluate_segmentations(self, segmentations, output_dir):
-        print 'evaluating segmentations'
+        print('evaluating segmentations')
         # compute histogram
         n_cl = self.num_classes
         hist = np.zeros((n_cl, n_cl))
@@ -560,7 +560,7 @@ class sym(datasets.imdb):
                 # save matlab result
                 results = {'labels': sg_labels, 'rois': rois, 'poses': poses, 'poses_refined': poses_new, 'poses_icp': poses_icp}
                 filename = os.path.join(mat_dir, '%04d.mat' % im_ind)
-                print filename
+                print(filename)
                 scipy.io.savemat(filename, results, do_compression=True)
 
                 poses_gt = meta_data['poses']
@@ -568,13 +568,13 @@ class sym(datasets.imdb):
                     poses_gt = np.reshape(poses_gt, (3, 4, 1))
                 num = poses_gt.shape[2]
 
-                for j in xrange(num):
+                for j in range(num):
                     if meta_data['cls_indexes'][j] <= 0:
                         continue
                     cls = self._classes[int(meta_data['cls_indexes'][j])]
                     count_all += 1
 
-                    for k in xrange(rois.shape[0]):
+                    for k in range(rois.shape[0]):
                         if rois[k, 1] != meta_data['cls_indexes'][j]:
                             continue
 
@@ -687,18 +687,18 @@ class sym(datasets.imdb):
 
         # overall accuracy
         acc = np.diag(hist).sum() / hist.sum()
-        print 'overall accuracy', acc
+        print('overall accuracy', acc)
         # per-class accuracy
         acc = np.diag(hist) / hist.sum(1)
-        print 'mean accuracy', np.nanmean(acc)
+        print('mean accuracy', np.nanmean(acc))
         # per-class IU
-        print 'per-class IU'
+        print('per-class IU')
         iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
         for i in range(n_cl):
-            print '{} {}'.format(self._classes[i], iu[i])
-        print 'mean IU', np.nanmean(iu)
+            print('{} {}'.format(self._classes[i], iu[i]))
+        print('mean IU', np.nanmean(iu))
         freq = hist.sum(1) / hist.sum()
-        print 'fwavacc', (freq[freq > 0] * iu[freq > 0]).sum()
+        print('fwavacc', (freq[freq > 0] * iu[freq > 0]).sum())
 
         filename = os.path.join(output_dir, 'segmentation.txt')
         with open(filename, 'wt') as f:
@@ -715,24 +715,24 @@ class sym(datasets.imdb):
         # pose accuracy
         if cfg.TEST.POSE_REG:
 
-            print 'correct poses reprojection: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel, count_all, float(count_correct_pixel) / float(count_all))
+            print('correct poses reprojection: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel, count_all, float(count_correct_pixel) / float(count_all)))
 
             if cfg.TEST.POSE_REFINE:
-                print 'correct poses reprojection after refinement: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel_refined, count_all, float(count_correct_pixel_refined) / float(count_all))
+                print('correct poses reprojection after refinement: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel_refined, count_all, float(count_correct_pixel_refined) / float(count_all)))
 
-                print 'correct poses reprojection after ICP: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel_icp, count_all, float(count_correct_pixel_icp) / float(count_all))
+                print('correct poses reprojection after ICP: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel_icp, count_all, float(count_correct_pixel_icp) / float(count_all)))
 
 
-            print 'correct poses: {}, all poses: {}, accuracy: {}'.format(count_correct, count_all, float(count_correct) / float(count_all))
+            print('correct poses: {}, all poses: {}, accuracy: {}'.format(count_correct, count_all, float(count_correct) / float(count_all)))
 
             if cfg.TEST.POSE_REFINE:
-                print 'correct poses after refinement: {}, all poses: {}, accuracy: {}'.format(count_correct_refined, count_all, float(count_correct_refined) / float(count_all))
+                print('correct poses after refinement: {}, all poses: {}, accuracy: {}'.format(count_correct_refined, count_all, float(count_correct_refined) / float(count_all)))
 
-                print 'correct poses after ICP: {}, all poses: {}, accuracy: {}'.format(count_correct_icp, count_all, float(count_correct_icp) / float(count_all))
+                print('correct poses after ICP: {}, all poses: {}, accuracy: {}'.format(count_correct_icp, count_all, float(count_correct_icp) / float(count_all)))
 
 
     def evaluate_detections(self, detections, output_dir):
-        print 'evaluating detections'
+        print('evaluating detections')
 
         # make matlab result dir
         import scipy.io
@@ -770,7 +770,7 @@ class sym(datasets.imdb):
                 # save matlab result
                 results = {'rois': rois, 'poses': poses}
                 filename = os.path.join(mat_dir, '%04d.mat' % im_ind)
-                print filename
+                print(filename)
                 scipy.io.savemat(filename, results, do_compression=True)
 
                 poses_gt = meta_data['poses']
@@ -778,13 +778,13 @@ class sym(datasets.imdb):
                     poses_gt = np.reshape(poses_gt, (3, 4, 1))
                 num = poses_gt.shape[2]
 
-                for j in xrange(num):
+                for j in range(num):
                     if meta_data['cls_indexes'][j] <= 0:
                         continue
                     cls = self._classes[int(meta_data['cls_indexes'][j])]
                     count_all += 1
 
-                    for k in xrange(rois.shape[0]):
+                    for k in range(rois.shape[0]):
                         if rois[k, 0] != meta_data['cls_indexes'][j]:
                             continue
 
@@ -819,8 +819,8 @@ class sym(datasets.imdb):
         # pose accuracy
         if cfg.TEST.POSE_REG:
 
-            print 'correct poses reprojection: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel, count_all, float(count_correct_pixel) / float(count_all))
-            print 'correct poses: {}, all poses: {}, accuracy: {}'.format(count_correct, count_all, float(count_correct) / float(count_all))
+            print('correct poses reprojection: {}, all poses: {}, accuracy: {}'.format(count_correct_pixel, count_all, float(count_correct_pixel) / float(count_all)))
+            print('correct poses: {}, all poses: {}, accuracy: {}'.format(count_correct, count_all, float(count_correct) / float(count_all)))
 
 if __name__ == '__main__':
     d = datasets.sym('test')
