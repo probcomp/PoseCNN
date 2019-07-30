@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import hard_label_op
+from .hard_label_op import hard_label_grad
 
 @ops.RegisterShape("Hardlabel")
 def _hard_label_shape(op):
@@ -16,6 +16,6 @@ def _hard_label_grad(op, grad):
   threshold = op.get_attr('threshold')
 
   # compute gradient
-  data_grad_prob, data_grad_gt = hard_label_op.hard_label_grad(bottom_prob, bottom_gt, grad, threshold)
+  data_grad_prob, data_grad_gt = hard_label_grad(bottom_prob, bottom_gt, grad, threshold)
 
   return [data_grad_prob, data_grad_gt]

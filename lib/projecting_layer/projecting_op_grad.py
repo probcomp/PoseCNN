@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import projecting_op
+from .projecting_op import project_grad
 '''
 @tf.RegisterShape("Project")
 def _project_shape(op):
@@ -36,6 +36,6 @@ def _project_grad(op, grad):
   threshold = op.get_attr('threshold')
 
   # compute gradient
-  data_grad = projecting_op.project_grad(data, depth, meta_data, grad, kernel_size, threshold)
+  data_grad = project_grad(data, depth, meta_data, grad, kernel_size, threshold)
 
   return [data_grad, None, None]  # List of one Tensor, since we have three input

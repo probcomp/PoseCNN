@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import computing_flow_op
+from .computing_flow_op import compute_flow_grad
 '''
 @tf.RegisterShape("Computeflow")
 def _computeflow_shape(op):
@@ -38,7 +38,7 @@ def _computeflow_grad(op, grad, grad_weights, _):
   max_weight = op.get_attr('max_weight')
 
   # compute gradient
-  data_grad, data_grad_weights = computing_flow_op.compute_flow_grad(data, bottom_weights, bottom_points, bottom_depth, bottom_meta_data, \
+  data_grad, data_grad_weights = compute_flow_grad(data, bottom_weights, bottom_points, bottom_depth, bottom_meta_data, \
       top_points, grad, grad_weights, kernel_size, threshold, max_weight)
 
   return [data_grad, data_grad_weights, None, None, None]  # List of one Tensor, since we have five input

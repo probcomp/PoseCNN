@@ -88,7 +88,7 @@ if __name__ == '__main__':
     num = 5
     rgb_filenames = []
     depth_filenames = []
-    for i in xrange(num):
+    for i in range(num):
         filename = root + '{:06d}-color.png'.format(i+1)
         print(filename)
         rgb_filenames.append(filename)

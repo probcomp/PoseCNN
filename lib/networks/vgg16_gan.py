@@ -146,7 +146,7 @@ class vgg16_gan(Network):
         # discriminator
         outputs_d = []
         for i in range(2):
-            print i
+            print(i)
             if i == 0:
                 reuse = None
                 self.layers['input_d'] = 255 * self.layers['vertex_pred']

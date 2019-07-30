@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import gradient_reversal_op
+from .gradient_reversal_op import gradient_reversal_grad
 
 @ops.RegisterShape("Gradientreversal")
 def _gradient_reversal_shape(op):
@@ -15,6 +15,6 @@ def _gradient_reversal_grad(op, grad):
   lambda_ = op.get_attr('lambda')
 
   # compute gradient
-  data_grad = gradient_reversal_op.gradient_reversal_grad(bottom_data, grad, lambda_)
+  data_grad = gradient_reversal_grad(bottom_data, grad, lambda_)
 
   return [data_grad]

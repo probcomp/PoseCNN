@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import hough_voting_op
+from .hough_voting_op import hough_voting_grad
 
 @ops.RegisterShape("Houghvoting")
 def _hough_voting_shape(op):
@@ -29,6 +29,6 @@ def _hough_voting_grad(op, grad, tmp, tmp1, _):
   bottom_vertex = op.inputs[1]
 
   # compute gradient
-  data_grad_prob, data_grad_vertex = hough_voting_op.hough_voting_grad(bottom_prob, bottom_vertex, grad)
+  data_grad_prob, data_grad_vertex = hough_voting_grad(bottom_prob, bottom_vertex, grad)
 
   return [data_grad_prob, data_grad_vertex, None, None, None]  # List of one Tensor, since we have two input

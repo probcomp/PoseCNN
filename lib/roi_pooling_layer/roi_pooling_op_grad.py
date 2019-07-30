@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import roi_pooling_op
+from .roi_pooling_op import roi_pool_grad
 
 @ops.RegisterShape("RoiPool")
 def _roi_pool_shape(op):
@@ -45,6 +45,6 @@ def _roi_pool_grad(op, grad, _):
   pool_channel = op.get_attr('pool_channel')
 
   # compute gradient
-  data_grad = roi_pooling_op.roi_pool_grad(data, rois, argmax, grad, pooled_height, pooled_width, spatial_scale, pool_channel)
+  data_grad = roi_pool_grad(data, rois, argmax, grad, pooled_height, pooled_width, spatial_scale, pool_channel)
 
   return [data_grad, None]  # List of one Tensor, since we have one input

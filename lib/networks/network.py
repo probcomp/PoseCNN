@@ -24,11 +24,11 @@ import gradient_reversal_layer.gradient_reversal_op as gradient_reversal_op
 import gradient_reversal_layer.gradient_reversal_op_grad
 import hard_label_layer.hard_label_op as hard_label_op
 import hard_label_layer.hard_label_op_grad
-from gru2d import GRU2DCell
-from gru2d_original import GRUCell
-from gru3d import GRU3DCell
-from vanilla2d import Vanilla2DCell
-from add2d import Add2DCell
+from .gru2d import GRU2DCell
+from .gru2d_original import GRUCell
+from .gru3d import GRU3DCell
+from .vanilla2d import Vanilla2DCell
+from .add2d import Add2DCell
 from rpn_layer.snippets import generate_anchors_pre
 from rpn_layer.proposal_layer import proposal_layer
 from rpn_layer.proposal_top_layer import proposal_top_layer
@@ -76,29 +76,29 @@ class Network(object):
         '''
         data_dict = np.load(data_path).item()
         for op_name in data_dict:
-            print op_name
+            print(op_name)
             with tf.variable_scope(op_name, reuse=True):
-                for param_name, data in data_dict[op_name].iteritems():
+                for param_name, data in data_dict[op_name].items():
                     try:
                         var = tf.get_variable(param_name)
                         session.run(var.assign(data))
-                        print op_name + ' ' + param_name + ' assigned'
+                        print(op_name + ' ' + param_name + ' assigned')
                     except ValueError:
                         if not ignore_missing:
                             raise
             # try to assign dual weights
             with tf.variable_scope(op_name+'_p', reuse=True):
-                for param_name, data in data_dict[op_name].iteritems():
+                for param_name, data in data_dict[op_name].items():
                     try:
                         var = tf.get_variable(param_name)
                         session.run(var.assign(data))
-                        print op_name + '_p ' + param_name + ' assigned'
+                        print(op_name + '_p ' + param_name + ' assigned')
                     except ValueError:
                         if not ignore_missing:
                             raise
 
             with tf.variable_scope(op_name+'_d', reuse=True):
-                for param_name, data in data_dict[op_name].iteritems():
+                for param_name, data in data_dict[op_name].items():
                     try:
                         var = tf.get_variable(param_name)
                         session.run(var.assign(data))
@@ -110,12 +110,12 @@ class Network(object):
         assert len(args)!=0
         self.inputs = []
         for layer in args:
-            if isinstance(layer, basestring):
+            if isinstance(layer, str):
                 try:
                     layer = self.layers[layer]
-                    print layer
+                    print(layer)
                 except KeyError:
-                    print self.layers.keys()
+                    print(list(self.layers.keys()))
                     raise KeyError('Unknown layer name fed: %s'%layer)
             self.inputs.append(layer)
         return self
@@ -124,12 +124,12 @@ class Network(object):
         try:
             layer = self.layers[layer]
         except KeyError:
-            print self.layers.keys()
+            print(list(self.layers.keys()))
             raise KeyError('Unknown layer name fed: %s'%layer)
         return layer
 
     def get_unique_name(self, prefix):
-        id = sum(t.startswith(prefix) for t,_ in self.layers.items())+1
+        id = sum(t.startswith(prefix) for t,_ in list(self.layers.items()))+1
         return '%s_%d'%(prefix, id)
 
     def make_var(self, name, shape, initializer=None, regularizer=None, trainable=True):

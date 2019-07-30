@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
-import backprojecting_op
+from .backprojecting_op import backproject_grad
 '''
 @tf.RegisterShape("Backproject")
 def _backproject_shape(op):
@@ -38,6 +38,6 @@ def _backproject_grad(op, grad, tmp, _):
   threshold = op.get_attr('threshold')
 
   # compute gradient
-  data_grad = backprojecting_op.backproject_grad(data, depth, meta_data, grad, grid_size, kernel_size, threshold)
+  data_grad = backproject_grad(data, depth, meta_data, grad, grid_size, kernel_size, threshold)
 
   return [data_grad, None, None, None, None]  # List of one Tensor, since we have five input

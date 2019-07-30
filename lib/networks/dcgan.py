@@ -59,7 +59,7 @@ class dcgan(Network):
         # discriminator
         outputs_d = []
         for i in range(2):
-            print i
+            print(i)
             if i == 0:
                 reuse = None
                 self.layers['input_d'] = self.layers['output_g']

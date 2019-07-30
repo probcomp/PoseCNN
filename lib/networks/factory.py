@@ -46,10 +46,10 @@ else:
 
 def get_network(name):
     """Get a network by name."""
-    if not __sets.has_key(name):
+    if name not in __sets:
         raise KeyError('Unknown network: {}'.format(name))
     return __sets[name]
 
 def list_networks():
     """List all registered imdbs."""
-    return __sets.keys()
+    return list(__sets.keys())
