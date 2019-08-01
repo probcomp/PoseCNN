@@ -199,8 +199,8 @@ def im_segment_single_frame(sess, net, im, im_depth, meta_data, voxelizer, exten
                 rois = rois[keep, :]
                 poses_init = poses_init[keep, :]
                 poses_pred = poses_pred[keep, :]
-                print(keep)
-                print(rois)
+                # print(keep)
+                # print(rois)
 
                 # combine poses
                 num = rois.shape[0]
@@ -212,8 +212,8 @@ def im_segment_single_frame(sess, net, im, im_depth, meta_data, voxelizer, exten
             else:
                 labels_2d, probs, vertex_pred, rois, poses = \
                     sess.run([net.get_output('label_2d'), net.get_output('prob_normalized'), net.get_output('vertex_pred'), net.get_output('rois'), net.get_output('poses_init')])
-                print(rois)
-                print((rois.shape))
+                # print(rois)
+                # print((rois.shape))
                 # non-maximum suppression
                 # keep = nms(rois[:, 2:], 0.5)
                 # rois = rois[keep, :]
@@ -813,8 +813,10 @@ def vis_segmentations_vertmaps(im, im_depth, im_labels, im_labels_gt, colors, ce
 
 
 def vis_segmentations_vertmaps_detection(im, im_depth, im_labels, colors, center_map, 
-  labels, rois, poses, poses_new, intrinsic_matrix, num_classes, classes, points):
+  labels, rois, poses, poses_new, intrinsic_matrix, num_classes, classes, points, f_name = "temp.png"):
     """Visual debugging of detections."""
+    import matplotlib as mpl
+    mpl.use('Agg')
     import matplotlib.pyplot as plt
     fig = plt.figure()
 
@@ -928,7 +930,8 @@ def vis_segmentations_vertmaps_detection(im, im_depth, im_labels, colors, center
             ax.set_xlim([0, im.shape[1]])
             ax.set_ylim([im.shape[0], 0])
 
-    plt.show()
+    # plt.show()
+    fig.savefig(f_name)
 
 
 
