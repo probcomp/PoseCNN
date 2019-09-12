@@ -24,7 +24,7 @@ import os
 import math
 import tensorflow as tf
 import time
-from transforms3d.quaternions import quat2mat, mat2quat
+from transforms3d.euler import quat2euler
 import scipy.io
 from scipy.optimize import minimize
 from normals import gpu_normals
@@ -58,11 +58,7 @@ def run_network(sess, net, imdb, images, meta_data):
         colors[i * 3 + 1] = imdb._class_colors[i][1]
         colors[i * 3 + 2] = imdb._class_colors[i][2]
 
-    if cfg.TEST.VISUALIZE:
-        perm = np.random.permutation(np.arange(n_images))
-        # perm = xrange(n_images)
-    else:
-        perm = list(range(n_images))
+    perm = list(range(n_images))
 
     if (cfg.TEST.VERTEX_REG_2D and cfg.TEST.POSE_REFINE) or (cfg.TEST.VERTEX_REG_3D and cfg.TEST.POSE_REG):
         import libsynthesizer
@@ -93,15 +89,26 @@ def run_network(sess, net, imdb, images, meta_data):
 
         detections = []
 
-        for i in range(rois.shape[0]):
-            cls_idx = int(rois[i, 1])
+        for j in range(rois.shape[0]):
+            cls_idx = int(rois[j, 1])
             if cls_idx > 0:
                 # projection
-                RT = np.zeros((3, 4), dtype=np.float32)
-                RT[:3, :3] = quat2mat(poses[i, :4])
-                RT[:, 3] = poses[i, 4:7]
+                # RT = np.zeros((3, 4), dtype=np.float32)
+                # RT[:3, :3] = quat2mat(poses[j, :4])
+                # RT[:, 3] = poses[j, 4:7]
+
+                # transform to world pose
+                pose_t = np.zeros((6,), dtype=np.float32)
+                pose_t[:3] = poses[j, 4:7]
+                # pose_t[[0,2]] = pose_t[[2,0]]
+
+                # flip z-axis to match renderer
+                pose_t[2] = -pose_t[2]
+                poses[j, [1,2]] = -poses[j, [1,2]]
+
+                pose_t[3:] = quat2euler(poses[j, :4], axes='sxyz')
                 cls = imdb._classes[cls_idx]
-                detections.append((cls, RT))
+                detections.append((cls, pose_t))
 
         batched_detections.append(detections)
 

@@ -1871,7 +1871,6 @@ def test_net_images(sess, net, imdb, weights_filename, rgb_filenames, depth_file
 
         # read color image
         rgba = pad_im(cv2.imread(rgb_filenames[i], cv2.IMREAD_UNCHANGED), 16)
-        print((rgb_filenames[i]))
         if rgba.shape[2] == 4:
             im = np.copy(rgba[:,:,:3])
             alpha = rgba[:,:,3]
